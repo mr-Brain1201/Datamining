@@ -32,6 +32,8 @@ class Parse5ka:
                     requests.exceptions.ConnectionError) as connect_err:
                 print(connect_err)
                 time.sleep(10)
+            else:
+                break
 
     def _parse(self, url):
         while url:
@@ -77,6 +79,8 @@ class CatParse5ka(Parse5ka):
                     requests.exceptions.ConnectionError) as connect_err:
                 print(connect_err)
                 time.sleep(10)
+            else:
+                break
 
 def get_save_path(dir_name):
     save_path = Path(__file__).parent.joinpath(dir_name)
