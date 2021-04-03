@@ -2,6 +2,7 @@ from pathlib import Path
 import time
 import json
 import requests
+import urllib3
 
 
 class Parse5ka:
@@ -26,6 +27,12 @@ class Parse5ka:
                     self._save(product, product_path)
             except ValueError as err:
                 print(err)
+                break
+            except (urllib3.exceptions.NewConnectionError, urllib3.exceptions.MaxRetryError,
+                    requests.exceptions.ConnectionError) as connect_err:
+                print(connect_err)
+                time.sleep(10)
+            else:
                 break
 
     def _parse(self, url):
@@ -67,6 +74,12 @@ class CatParse5ka(Parse5ka):
                     self._save(cat, cat_path)
             except ValueError as err:
                 print(err)
+                break
+            except (urllib3.exceptions.NewConnectionError, urllib3.exceptions.MaxRetryError,
+                    requests.exceptions.ConnectionError) as connect_err:
+                print(connect_err)
+                time.sleep(10)
+            else:
                 break
 
 def get_save_path(dir_name):
