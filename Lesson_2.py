@@ -31,7 +31,6 @@ class MagnitParse:
         self.collection = db["magnit"]
 
     def _get_response(self, url, *args, **kwargs):
-        # TODO: Сделать Обработку ошибок и статусов
         while True:
             response = requests.get(url, *args, **kwargs, headers=self.headers)
             if response.status_code in (200, 301, 304):
@@ -39,7 +38,6 @@ class MagnitParse:
             time.sleep(1)
 
     def _get_soup(self, url, *args, **kwargs):
-        # TODO: Обработать ошибки
         return bs4.BeautifulSoup(self._get_response(url, *args, **kwargs).text, "lxml")
 
     def run(self):
@@ -74,12 +72,11 @@ class MagnitParse:
                 )
             ),
             "image_url": lambda tag: urljoin(self.start_url, tag.find("img").attrs.get("data-src")),
-            #FIXME не отдает текст
             "data_from": lambda tag: self.__get_date(
-                tag.find("div", attrs={"class": "card_sale__date"}).text
+                tag.find("div", attrs={"class": "card-sale__date"}).text
             )[0],
             "data_to": lambda tag: self.__get_date(
-                tag.find("div", attrs={"class": "card_sale__date"}).text
+                tag.find("div", attrs={"class": "card-sale__date"}).text
             )[1]
         }
     def __get_date(self, date_string) -> list:
@@ -87,23 +84,20 @@ class MagnitParse:
         result = []
         for date in date_list:
             temp_date = date.split()
-            # print(1)
-            # if dt.datetime.now().month == 1 & MONTHS.get(temp_date[1][:3]) == 12:
-            #     temp_year = dt.datetime.now().year - 1
-            # elif dt.datetime.now().month == 12 & MONTHS.get(temp_date[1][:3]) == 1:
-            #     temp_year = dt.datetime.now().year + 1
-            # else:
-            #     temp_year = dt.datetime.now().year
+            print(1)
+            if dt.datetime.now().month == 1 & MONTHS.get(temp_date[1][:3]) == 12:
+                temp_year = dt.datetime.now().year - 1
+            elif dt.datetime.now().month == 12 & MONTHS.get(temp_date[1][:3]) == 1:
+                temp_year = dt.datetime.now().year + 1
+            else:
+                temp_year = dt.datetime.now().year
             result.append(
                 dt.datetime(
-                    year=dt.datetime.now().year,
+                    year=temp_year,
                     day=int(temp_date[0]),
                     month=MONTHS.get(temp_date[1][:3])
                 )
             )
-
-        #FIXME: обработка смены года
-        # всвязи с тем, что вкция могла еще не начаться, то условие типа ес
         return result
 
     def _parse(self, url):
@@ -113,12 +107,11 @@ class MagnitParse:
         for product_tag in product_tags:
             product = {}
             for key, funk in self._template.items():
-                # TODO: Обработать ошибки отсутсвия полей
-                # try:
-                product[key] = funk(product_tag)
-                # except (AttributeError, IndexError, ValueError):
-                #     product[key] = None
-            yield product
+                try:
+                    product[key] = funk(product_tag)
+                except (AttributeError, IndexError, ValueError):
+                    product[key] = None
+                yield product
 
     def _save(self, data):
         self.collection.insert_one(data)
@@ -129,8 +122,3 @@ if __name__ == "__main__":
     db_client = pymongo.MongoClient("mongodb://localhost:27017")
     parser = MagnitParse(url, db_client)
     parser.run()
-
-"""
-for itm in collection.find({'product_name': {"$regex": r".*говяд"}}, {"url":1}):
-    print(itm)
-"""
