@@ -4,14 +4,14 @@ import datetime as dt
 import time
 import bs4
 import pymongo
-import urllib3
+from urllib3.exceptions import NewConnectionError, MaxRetryError
 
 MONTHS = {
     "янв": 1,
     "фев": 2,
     "мар": 3,
     "апр": 4,
-    "май": 5,
+    "мая": 5,
     "июн": 6,
     "июл": 7,
     "авг": 8,
@@ -48,7 +48,7 @@ class MagnitParse:
             except ValueError as err:
                 print(err)
                 break
-            except (urllib3.exceptions.NewConnectionError, urllib3.exceptions.MaxRetryError,
+            except (NewConnectionError, MaxRetryError,
                     requests.exceptions.ConnectionError) as connect_err:
                 print(connect_err)
                 time.sleep(10)
@@ -80,17 +80,18 @@ class MagnitParse:
             )[1]
         }
     def __get_date(self, date_string) -> list:
+        global temp_year
         date_list = date_string.replace("с ", "", 1).replace("\n", "").split("до")
         result = []
         for date in date_list:
             temp_date = date.split()
-            print(1)
-            if dt.datetime.now().month == 1 & MONTHS.get(temp_date[1][:3]) == 12:
-                temp_year = dt.datetime.now().year - 1
-            elif dt.datetime.now().month == 12 & MONTHS.get(temp_date[1][:3]) == 1:
-                temp_year = dt.datetime.now().year + 1
-            else:
+            temp_month = MONTHS.get(temp_date[1][:3])
+            if temp_month != 1 or 12:
                 temp_year = dt.datetime.now().year
+            elif dt.datetime.now().month == 1 and temp_month == 12:
+                temp_year = dt.datetime.now().year - 1
+            elif dt.datetime.now().month == 12 and temp_month == 1:
+                temp_year = dt.datetime.now().year + 1
             result.append(
                 dt.datetime(
                     year=temp_year,
@@ -111,7 +112,7 @@ class MagnitParse:
                     product[key] = funk(product_tag)
                 except (AttributeError, IndexError, ValueError):
                     product[key] = None
-                yield product
+            yield product
 
     def _save(self, data):
         self.collection.insert_one(data)
