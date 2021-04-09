@@ -79,12 +79,13 @@ class MagnitParse:
                 tag.find("div", attrs={"class": "card-sale__date"}).text
             )[1]
         }
+
     def __get_date(self, date_string) -> list:
-        global temp_year
         date_list = date_string.replace("с ", "", 1).replace("\n", "").split("до")
         result = []
         for date in date_list:
             temp_date = date.split()
+            temp_year = None
             temp_month = MONTHS.get(temp_date[1][:3])
             if temp_month != 1 or 12:
                 temp_year = dt.datetime.now().year
