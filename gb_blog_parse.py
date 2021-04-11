@@ -3,6 +3,8 @@ import bs4
 from urllib.parse import urljoin
 from database.database import Database
 import datetime as dt
+from time import sleep
+from urllib3.exceptions import NewConnectionError, MaxRetryError
 
 MONTHS = {
     "янв": 1,
@@ -21,6 +23,8 @@ MONTHS = {
 
 
 class GbBlogParse:
+    headers = {"User-Agent": "cap. Jack Sparrow"}
+
     def __init__(self, start_url, database: Database):
         self.db = database
         self.start_url = start_url
@@ -37,9 +41,12 @@ class GbBlogParse:
 
         return task
 
-    def _get_response(self, url):
-        response = requests.get(url)
-        return response
+    def _get_response(self, url, *args, **kwargs) -> requests.Response:
+        while True:
+            response = requests.get(url, *args, **kwargs, headers=self.headers)
+            if response.status_code in (200, 301, 304):
+                return response
+            sleep(1)
 
     def _get_soup(self, url):
         soup = bs4.BeautifulSoup(self._get_response(url).text, "lxml")
@@ -111,10 +118,21 @@ class GbBlogParse:
                 self.tasks.append(self.get_task(post_url, self.parse_post))
 
     def run(self):
-        for task in self.tasks:
-            task_result = task()
-            if task_result:
-                self.db.create_post(task_result)
+        while True:
+            try:
+                for task in self.tasks:
+                    task_result = task()
+                    if task_result:
+                        self.db.create_post(task_result)
+            except ValueError as err:
+                print(err)
+                break
+            except (NewConnectionError, MaxRetryError,
+                    requests.exceptions.ConnectionError) as connect_err:
+                print(connect_err)
+                sleep(10)
+            else:
+                break
 
     def save(self, data):
         self.db.create_post(data)

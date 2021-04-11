@@ -65,4 +65,4 @@ class Comment(Base):
         self.parent_id = kwargs["parent_id"]
         self.body = kwargs["body"]
         self.created_at = dt.datetime.fromisoformat(kwargs["created_at"])
-        self.writer = kwargs["writers"]
+        self.writer = kwargs["writer"]

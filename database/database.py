@@ -85,4 +85,4 @@ class Database:
             session.rollback()
         finally:
             session.close()
-        print(1)
+        print("#", end="")
