@@ -9,7 +9,6 @@ AVITO_FLAT_XPATH = {
     "title": '//span[@class="title-info-title-text"]/text()',
     "price": '//script[contains(text(), "window.dataLayer = ")]',
     "address": '//span[@class="item-address__string"]/text()',
-    "param": '//span[@class="item-params-label"]/text()',
-    "value": '//li[@class="item-params-list-item"/text()]',
+    "params": '//ul[@class="item-params-list"]',
     "seller_url": '//div[@data-marker="seller-info/name"]/a/@href'
 }

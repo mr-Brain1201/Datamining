@@ -29,6 +29,18 @@ def get_price(text):
     return result
 
 
+def get_params_of_flat(item: str) -> dict:
+    selector = Selector(text=item)
+    selector_list = selector.xpath('//ul[@class="item-params-list"]/li')
+    for sel in selector_list:
+        key = sel.xpath('//span[@class="item-params-label"]/text()').extract()
+        value = sel.xpath('//li/text()').extract()
+        while ' ' in value:
+            value.remove(' ')
+        data = dict(zip(key, value))
+        return data
+
+
 class AvitoLoader(ItemLoader):
     default_item_class = dict
     url_out = TakeFirst()
@@ -37,7 +49,8 @@ class AvitoLoader(ItemLoader):
     price_in = MapCompose(get_price)
     price_out = TakeFirst()
     address_out = TakeFirst()
-    # params_out = TakeFirst()
+    params_in = MapCompose(get_params_of_flat)
+    params_out = TakeFirst()
     seller_url_in = MapCompose(avito_seller_url)
     seller_url_out = TakeFirst()
     # salary_out = flat_text

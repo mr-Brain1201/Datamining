@@ -13,7 +13,7 @@ class AvitoSpider(scrapy.Spider):
 
     def _get_follow_xpath(self, response, xpath, callback):
         for url in response.xpath(xpath):
-            yield response.follow(url, callback=callback, cookies={'route': "1f067d9ee3b1eb3907829ecf9c31565d"})
+            yield response.follow(url, callback=callback, cookies={'VISITOR_INFO1_LIVE': '6OeaA1Iof6M', 's_gl': 'c2b7e804c78d5155b602c25657860b1ecwIAAABSVQ=='})
 
     def parse(self, response, **kwargs):
         callbacks = {
