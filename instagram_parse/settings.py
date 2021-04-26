@@ -1,4 +1,4 @@
-# Scrapy settings for instagram_parse project
+# Scrapy settings for instag_parse project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -12,10 +12,11 @@ BOT_NAME = 'instagram_parse'
 SPIDER_MODULES = ['instagram_parse.spiders']
 NEWSPIDER_MODULE = 'instagram_parse.spiders'
 
+LOG_ENABLE = True
+LOG_LEVEL = "DEBUG"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' \
-             'Chrome/90.0.4430.72 Safari/537.36'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -26,7 +27,7 @@ CONCURRENT_REQUESTS = 32
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 0.05
+#DOWNLOAD_DELAY = 3
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -39,20 +40,20 @@ TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
 DEFAULT_REQUEST_HEADERS = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3",
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3',
 }
 
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'instagram_parse.middlewares.InstagramParseSpiderMiddleware': 543,
+#    'instag_parse.middlewares.InstagParseSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'instagram_parse.middlewares.InstagramParseDownloaderMiddleware': 543,
+#    'instag_parse.middlewares.InstagParseDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
@@ -63,17 +64,28 @@ DEFAULT_REQUEST_HEADERS = {
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
+
+IMAGES_STORE = "images"
+
 ITEM_PIPELINES = {
-   'instagram_parse.pipelines.InstagramParsePipeline': 300,
+    'instagram_parse.pipelines.InstagParsePipeline': 300,
+    'instagram_parse.pipelines.InstagImageDownloadPipline': 200,
 }
+# ITEM_PIPELINES = {
+#     "gb_parse.pipelines.GbParsePipeline": 100,
+#     "gb_parse.pipelines.GbParseMongoPipeline": 200,
+#     "gb_parse.pipelines.GbImageDownloadPipeline": 50,
+# }
+
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
+DOWNLOAD_DELAY = 0.05
 AUTOTHROTTLE_ENABLED = True
 # The initial download delay
-AUTOTHROTTLE_START_DELAY = 5
+AUTOTHROTTLE_START_DELAY = 3
 # The maximum download delay to be set in case of high latencies
-AUTOTHROTTLE_MAX_DELAY = 10
+AUTOTHROTTLE_MAX_DELAY = 15
 # The average number of requests Scrapy should be sending in parallel to
 # each remote server
 #AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0

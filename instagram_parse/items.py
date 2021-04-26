@@ -6,7 +6,22 @@
 import scrapy
 
 
-class InstagramParseItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
+class InstagParseItem(scrapy.Item):
+    _id = scrapy.Field()
+    date_parse = scrapy.Field()
+    data = scrapy.Field()
+    images = scrapy.Field()
+#
+# class Insta(scrapy.Item):
+#     _id = scrapy.Field()
+#     date_parse = scrapy.Field()
+#     data = scrapy.Field()
+#     # photos = scrapy.Field()
+
+
+class InstagTag(InstagParseItem):
+    pass
+
+
+class InstagPost(InstagParseItem):
     pass

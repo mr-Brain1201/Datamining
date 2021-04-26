@@ -1,3 +1,5 @@
+
+#pip install python-dotenv
 import os
 import dotenv
 from scrapy.crawler import CrawlerProcess
@@ -11,7 +13,7 @@ if __name__ == "__main__":
     crawler_settings = Settings()
     crawler_settings.setmodule("instagram_parse.settings")
     crawler_proc = CrawlerProcess(settings=crawler_settings)
-    tags = ["python", "programming"]
+    tags = ["python"]
     crawler_proc.crawl(
         InstagramSpider,
         login=os.getenv("USRN"),
