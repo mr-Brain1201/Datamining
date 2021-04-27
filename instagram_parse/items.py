@@ -6,7 +6,7 @@
 import scrapy
 
 
-class InstagParseItem(scrapy.Item):
+class InstaParseItem(scrapy.Item):
     _id = scrapy.Field()
     date_parse = scrapy.Field()
     data = scrapy.Field()
@@ -19,9 +19,9 @@ class InstagParseItem(scrapy.Item):
 #     # photos = scrapy.Field()
 
 
-class InstagTag(InstagParseItem):
+class InstaTag(InstagParseItem):
     pass
 
 
-class InstagPost(InstagParseItem):
+class InstaPost(InstagParseItem):
     pass

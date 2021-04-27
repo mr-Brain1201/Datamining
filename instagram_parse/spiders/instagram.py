@@ -1,24 +1,8 @@
-# Урок 6, задача 1.
-"""
-Источник instgram
-Задача авторизованным пользователем обойти список произвольных тегов,
-Сохранить структуру Item, олицетворяющую сам Tag (только информация о теге)
-Сохранить структуру данных поста, Включая обход пагинации. (каждый пост как отдельный item, словарь внутри node)
-
-Все структуры должны иметь след вид:
-date_parse (datetime) время когда произошло создание структуры
-data - данные полученые от инстаграм
-Скачать изображения всех постов и сохранить на диск
-"""
-# pip install python-dotenv
-# pip install selenium
-# pip install pillow (для того, чтобы Scrapy мог скачивать изображения)
-
 import json
 import datetime
 from urllib.parse import urlencode
 import scrapy
-from ..items import InstagTag, InstagPost
+from ..items import InstaTag, InstaPost
 
 
 class InstagramSpider(scrapy.Spider):
@@ -55,12 +39,12 @@ class InstagramSpider(scrapy.Spider):
 
     def tag_page_parse(self, response):
         js_data = self.get_js_data_extract(response)
-        yield InstagTag(date_parse=datetime.datetime.now(), data=self.get_structure_of_tag(js_data))
+        yield InstaTag(date_parse=datetime.datetime.now(), data=self.get_structure_of_tag(js_data))
         yield response.follow(f"{self.api_url}?{urlencode(self.get_pagination(js_data))}", callback=self.api_parse)
 
     def api_parse(self, response):
         js_data_api = response.json()
-        yield InstagPost(date_parse=datetime.datetime.now(),
+        yield InstaPost(date_parse=datetime.datetime.now(),
                          data=self.get_structure_of_posts(js_data_api),
                          images=self.get_image_of_post(js_data_api))
         yield response.follow(f"{self.api_url}?{urlencode(self.get_pagination_for_api(js_data_api))}",
@@ -69,7 +53,7 @@ class InstagramSpider(scrapy.Spider):
     def get_structure_of_tag(self, js_data: dict):
         structure_dict = {}
         items_dict = {}
-        for key, value in (js_data["entry_data"]["TagPage"][0]["graphql"]["hashtag"]).items():
+        for key, value in (js_data["entry_data"]["TagPage"][0]["data"]).items():
             if type(value) not in [type({}), type([])]:
                 structure_dict[key] = value
             if type(value) in [type({}), type([])]:
@@ -86,10 +70,9 @@ class InstagramSpider(scrapy.Spider):
 
     def get_pagination(self, js_data: dict):
         dict_variables = {
-            "tag_name": js_data["entry_data"]["TagPage"][0]["graphql"]["hashtag"]["name"],
+            "tag_name": js_data["entry_data"]["TagPage"][0]["data"]["name"],
             "first": 66,
-            "after": js_data["entry_data"]["TagPage"][0]["graphql"]["hashtag"]["edge_hashtag_to_media"]["page_info"][
-                "end_cursor"]
+            "after": js_data["entry_data"]["TagPage"][0]["data"]["recent"]["next_max_id"]
         }
         query = {"query_hash": "9b498c08113f1e09617a1703c22b2f32", "variables": json.dumps(dict_variables)}
         return query
@@ -112,58 +95,8 @@ class InstagramSpider(scrapy.Spider):
             images_list.append(link_of_image)
         return images_list
 
-
-    #
-    #     js_data = self.js_data_extract(response)
-    #     insta_tag = InstTag(js_data["entry_data"]["TagPage"][0]["graphql"]["hashtag"])
-    #     yield insta_tag.get_tag_item()
-    #     yield from insta_tag.get_post_items()
-    #     yield response.follow(
-    #         f"{self.api_url}?{urlencode(insta_tag.paginate_params())}",
-    #         callback=self._api_tag_parse,
-    #     )
-    #
-    # def _api_tag_parse(self, response):
-    #     data = response.json()
-    #     insta_tag = InstTag(data["data"]["hashtag"])
-    #     yield from insta_tag.get_post_items()
-    #     yield response.follow(
-    #         f"{self.api_url}?{urlencode(insta_tag.paginate_params())}",
-    #         callback=self._api_tag_parse,
-    #     )
-
     def get_js_data_extract(self, response):
         script = response.xpath(
             "//script[contains(text(), 'window._sharedData = ')]/text()"
         ).extract_first()
         return json.loads(script.replace("window._sharedData = ", "")[:-1])
-
-#
-# class InstTag:
-#     query_hash = "9b498c08113f1e09617a1703c22b2f32"
-#
-#     def __init__(self, hashtag: dict):
-#         self.variables = {
-#             "tag_name": hashtag["name"],
-#             "first": 100,
-#             "after": hashtag["edge_hashtag_to_media"]["page_info"]["end_cursor"],
-#         }
-#         self.hashtag = hashtag
-#
-#     def get_tag_item(self):
-#         item = InstaTag()
-#         item["date_parse"] = dt.datetime.utcnow()
-#         data = {}
-#         for key, value in self.hashtag.items():
-#             if not (isinstance(value, dict) or isinstance(value, list)):
-#                 data[key] = value
-#         item["data"] = data
-#         return item
-#
-#     def paginate_params(self):
-#         url_query = {"query_hash": self.query_hash, "variables": json.dumps(self.variables)}
-#         return url_query
-#
-#     def get_post_items(self):
-#         for edge in self.hashtag["edge_hashtag_to_media"]["edges"]:
-#             yield InstaPost(date_parse=dt.datetime.utcnow(), data=edge["node"])
