@@ -19,9 +19,9 @@ class InstaParseItem(scrapy.Item):
 #     # photos = scrapy.Field()
 
 
-class InstaTag(InstagParseItem):
+class InstaTag(InstaParseItem):
     pass
 
 
-class InstaPost(InstagParseItem):
+class InstaPost(InstaParseItem):
     pass

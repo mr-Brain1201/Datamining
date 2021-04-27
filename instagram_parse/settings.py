@@ -69,7 +69,8 @@ IMAGES_STORE = "images"
 
 ITEM_PIPELINES = {
     'instagram_parse.pipelines.InstagParsePipeline': 300,
-    'instagram_parse.pipelines.InstagImageDownloadPipline': 200,
+    'instagram_parse.pipelines.InstagImageDownloadPipeline': 200,
+    'instagram_parse.pipelines.InstagParseMongoPipeline': 100,
 }
 # ITEM_PIPELINES = {
 #     "gb_parse.pipelines.GbParsePipeline": 100,

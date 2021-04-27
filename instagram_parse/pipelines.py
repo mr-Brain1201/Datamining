@@ -9,12 +9,28 @@
 
 from scrapy.pipelines.images import ImagesPipeline
 from scrapy import Request
+import pymongo
+
 
 class InstagParsePipeline:
     def process_item(self, item, spider):
         return item
 
-class InstagImageDownloadPipline(ImagesPipeline):
+
+class InstagParseMongoPipeline:
+    def __init__(self):
+        client = pymongo.MongoClient()
+        self.db = client["instagram"]
+
+    def process_item(self, item, spider):
+        if "entry_data" in item.keys():
+            self.db[spider.name + "_tags"].insert_one(item)
+        else:
+            self.db[spider.name + "_posts"].insert_one(item)
+        return item
+
+
+class InstagImageDownloadPipeline(ImagesPipeline):
     def get_media_requests(self, item, info):
         # if 'images' in
         for url in item.get('images', []):
