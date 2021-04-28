@@ -2,7 +2,10 @@ import scrapy
 import json
 import pickle
 import sys
-from urllib.parse import urlencode#, parse_qs, urljoin
+from urllib.parse import urlencode  # , parse_qs, urljoin
+from gb_parse.items import InstaItem
+
+
 # import datetime as dt
 
 
@@ -24,7 +27,9 @@ class InstasearchSpider(scrapy.Spider):
                  'first': 100,
                  'after': ''
                  }
+    list_id = []
     db = {}
+    work_graph = []
     graph = {
         'target_user': [],
         'chance_to_way': False,
@@ -45,6 +50,7 @@ class InstasearchSpider(scrapy.Spider):
         self.graph['target_user'].append(accounts_list[1])
 
     def parse(self, response, **kwargs):
+        username = None
         try:
             js_data = self.js_data_extract(response)
             yield scrapy.FormRequest(
@@ -57,37 +63,24 @@ class InstasearchSpider(scrapy.Spider):
                 },
                 headers={'X-CSRFToken': js_data['config']['csrf_token']}
             )
-        except AttributeError:
-            try:
-                with open(self.file, 'rb') as f:
-                    data_file = pickle.load(f)
-                    if data_file['target_user'] == self.graph['target_user']:
-                        if data_file['chance_to_way']:
-                            if len(data_file['way_list']):
-                                print(f'Путь возможен и найден: {data_file["way_list"]}')
-                                sys.exit()
-                            else:
-                                print('Путь возможен но пока не найден')
-                                sys.exit()
-                        else:
-                            self.graph['data'] = data_file['data']
-                    else:
-                        print(
-                            'Не корректный файл с данными (не совпадают аккаунты), удалите старый файл или скорректруйте целевые аккаунты.')
-                        sys.exit()
-            except FileNotFoundError:
-                print(f'Файл {self.file} не найден или не корректный, создается новый.')
-                with open(self.file, 'wb') as f:
-                    pickle.dump(self.graph, f)
+        except AttributeError as err:
+            print(err)
             if response.json().get('authenticated'):
-                for i, account in enumerate(self.accounts_list):
-                    yield response.follow(f'/{account}/', callback=self.get_graph, meta={'side': str(i + 1)})
+                if len(self.list_id) == 0:
+                    for i, account in enumerate(self.accounts_list):
+                        self.list_id.append(account)
+                        yield response.follow(f'/{account}/', callback=self.get_graph, meta={'side': str(i + 1)})
+                else:
+                    self.list_id.append(username)
+                    return response.follow(f'/{username}/', callback=self.get_graph)
 
     def get_graph(self, response):  # функция входа, через которую проходт только стартовые аккаунты
         js_data = self.js_data_extract(response)
         side = response.meta['side']
         js_data_user = js_data['entry_data']['ProfilePage'][0]['graphql']['user']
         id = js_data_user['id']
+        username = js_data_user['username']
+        self.list_id.append(username)
         self.graph['data'][side]['all'].add(id)
         for hash in self.query_hash.keys():
             url_api = self.get_api_url(id, hash)
@@ -116,9 +109,13 @@ class InstasearchSpider(scrapy.Spider):
                 }
             if follow == 'followers':
                 data = data['data']['user']['edge_followed_by']
+                for edge in data["edges"]:
+                    self.list_id.append(edge["node"]["username"])
                 self.db[id]['count_followers'] = data['count']
             else:
                 data = data['data']['user']['edge_follow']
+                for edge in data["edges"]:
+                    self.list_id.append(edge["node"]["username"])
                 self.db[id]['count_following'] = data['count']
 
             # добавляем списки подписантов или подписчиков
@@ -126,14 +123,14 @@ class InstasearchSpider(scrapy.Spider):
                 self.db[id][follow].append(pack_follow)
 
             # сканируем следующие страницы с api
-            while data['page_info']['has_next_page']:
-                after = data['page_info']['end_cursor']
-                url_api = self.get_api_url(id, follow, after)
-                yield response.follow(
-                    url_api,
-                    callback=self.parse_api,
-                    meta={'follow': follow, 'id': id, 'side': side}
-                )
+            # while data['page_info']['has_next_page']:
+            #     after = data['page_info']['end_cursor']
+            #     url_api = self.get_api_url(id, follow, after)
+            #     yield response.follow(
+            #         url_api,
+            #         callback=self.parse_api,
+            #         meta={'follow': follow, 'id': id, 'side': side}
+            #     )
 
             # если количество собранных аккаунтов в обеих списках полное, отправляем в pipeline item взаимные
             if ('count_followers' in self.db[id]) and ('count_following' in self.db[id]):
@@ -141,14 +138,26 @@ class InstasearchSpider(scrapy.Spider):
                         len(self.db[id]['following']) == self.db[id]['count_following']):
                     f1 = set(self.db[id]['followers'])
                     f2 = set(self.db[id]['following'])
-                    f2.intersection_update(f1)  # убираем не взаимные
-                    item = {
+                    mutual_follower = f2.intersection(f1)  # убираем не взаимные
+                    self.work_graph.append(mutual_follower)
+                    for follower in mutual_follower:
+                        str(follower)
+                        return mutual_follower
+                    print(1)
+                    # self.list_id.
+                    data_pipeline = {
                         'side': self.db[id]['side'],
                         'id': id,
-                        'graph': f2
+                        'graph': mutual_follower,
+                        'list_name': set(self.list_id),
+                        'work_graph': self.work_graph,
+                        'target_user': self.accounts_list[1]
                     }
+                    item = InstaItem(data_pipeline)
                     del self.db[id]
-                    yield item
+
+                    yield response.follow(f'/{data["edges"]["node"]["username"]}/', callback=self.get_graph)
+                    return item
 
         # вывод текущей информации о размере основного графа
         print(len(self.graph['data']['1']), len(self.graph['data']['2']))

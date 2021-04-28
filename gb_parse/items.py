@@ -7,7 +7,10 @@ import scrapy
 # from itemloaders.processors import Identity
 
 
-class GbParseItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class InstaItem(scrapy.Item):
+    side = scrapy.Field()
+    id = scrapy.Field()
+    graph = scrapy.Field()
+    list_name = scrapy.Field()
+    work_graph = scrapy.Field()
+    target_user = scrapy.Field()

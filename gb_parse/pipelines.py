@@ -6,30 +6,33 @@
 
 # useful for handling different item types with a single interface
 # from itemadapter import ItemAdapter
-import pickle, sys
+import pickle
+import sys
 
 
 class GbParsePipeline:
 
     def process_item(self, item, spider):
-        with open(spider.file, 'rb') as f:
-            graph_f = pickle.load(f)
-        graph_f['data'][item['side']][item['id']] = item['graph']
-        graph_f['data'][item['side']]['all'].update(item['graph'])
-        other_side = str(2 // int(item['side']))
-        if item['id'] in graph_f['data'][other_side]['all']:  # если есть сходимость частей
-            graph_f['chance_to_way'] = True
-            graph_f['data']['1'].update(graph_f['data']['2'])  # объединяем части
-            all_graph = graph_f['data']['1']
-            graph_f['way_list'] = self.bfs(all_graph, graph_f['target_user'][0], graph_f['target_user'][1])
-            print(f'Путь возможен и найден: {graph_f["way_list"]}')
-            with open(spider.file, 'wb') as f:
-                pickle.dump(graph_f, f)
-            sys.exit()
-        with open(spider.file, 'wb') as f:
-            pickle.dump(graph_f, f)
-        print(item['id'])
-        return item
+        # with open(spider.file, 'rb') as f:
+        #     graph_f = pickle.load(f)
+        # graph_f['data'][item['side']][item['id']] = item['graph']
+        # graph_f['data'][item['side']]['all'].update(item['graph'])
+        # other_side = str(2 // int(item['side']))
+        # if item['id'] in graph_f['data'][other_side]['all']:  # если есть сходимость частей
+        #     graph_f['chance_to_way'] = True
+        #     graph_f['data']['1'].update(graph_f['data']['2'])  # объединяем части
+        #     all_graph = graph_f['data']['1']
+        #     graph_f['way_list'] = self.bfs(all_graph, graph_f['target_user'][0], graph_f['target_user'][1])
+        #     print(f'Путь возможен и найден: {graph_f["way_list"]}')
+        #     with open(spider.file, 'wb') as f:
+        #         pickle.dump(graph_f, f)
+        #     sys.exit()
+        # with open(spider.file, 'wb') as f:
+        #     pickle.dump(graph_f, f)
+        # print(item['id'])
+        # return item
+        if item["side"] == 1 & item["target_user"] in item["list_name"]:
+            print(1)
 
     # поиск пути по графу
     def bfs(self, graph, start, finish):
